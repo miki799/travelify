@@ -7,13 +7,13 @@
     margin: 0;
     padding: 0;
     font-family: "Cuprum", sans-serif;
-
 }
 
 html {
     font-size: 62.5%;
     height: 100%;
-    background: #6ABCC3; /* App background color */
+    background: #0FA3B1;
+    /* background: #6ABCC3; old app background color*/
 }
 
 body {

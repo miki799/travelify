@@ -1,39 +1,91 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import ReactTooltip from "react-tooltip";
 import { Redirect } from "react-router-dom";
 import { routes } from "../../miscellanous/Routes";
+import "./styles/messageTooltip.css";
 import noProfilePictureIcon from "../../assets/noProfilePictureIcon.svg";
+import moment from "moment";
+import "moment/locale/pl";
 
-const SingleMessage = ({ url, side=null, friendId=null, friendDisplay=null }) => {
+const SingleMessage = ({
+  url,
+  newestMessageRef,
+  side = null,
+  friendName = null,
+  friendId = null,
+  message,
+  messageId,
+  messageDate,
+  chatsDisplay = null,
+}) => {
+  const [redirectToProfile, setRedirectToProfile] = useState(false);
 
-  const [ redirectToProfile, setRedirectToProfile ] = useState(false);
+  useEffect(() => {
+    moment.locale("pl");
+  }, []);
 
   if (redirectToProfile) {
-    friendDisplay(""); 
-    return <Redirect
-			push to={{
-        pathname: routes.user.replace(/:id/i, friendId), 
-        state: { selectedUser: { selectIsTrue: true, id: friendId, isHeFriend: true} }
-			}}
-    />
-	}
+    chatsDisplay("");
+    return (
+      <Redirect
+        push
+        to={{
+          pathname: routes.user.replace(/:id/i, friendId),
+          state: {
+            selectedUser: {
+              selectIsTrue: true,
+              id: friendId,
+              isHeFriend: true,
+            },
+          },
+        }}
+      />
+    );
+  }
 
   return (
-    <Container side={side}>
-      {
-        side === "right" ? null : 
-        <ProfileIcon 
-          src={url !== undefined && url ? url : noProfilePictureIcon} 
-          alt="Profile picture"
-          onError={(e) => {e.target.onError = null; e.target.src=noProfilePictureIcon;}} 
-          onClick={() => setRedirectToProfile(true)}
-        />
-      }
-      <TextContainer side={side}>
-        Lorem Ipsum is simply dummy text of the printing and typesetting
-        industry. Lorem Ipsum has been the industry's standard dummy text ever
-  
+    <Container side={side} ref={newestMessageRef}>
+      {side === "right" ? null : (
+        <>
+          <ProfileIcon
+            data-tip
+            data-for={"friendTip" + messageDate}
+            src={url !== undefined && url ? url : noProfilePictureIcon}
+            alt="Profile picture"
+            onError={(e) => {
+              e.target.onError = null;
+              e.target.src = noProfilePictureIcon;
+            }}
+            onClick={() => setRedirectToProfile(true)}
+          />
+          <ReactTooltip
+            id={"friendTip" + messageDate}
+            place={"left"}
+            effect="solid"
+            delayShow={250}
+            className="message-tooltip"
+          >
+            {friendName}
+          </ReactTooltip>
+        </>
+      )}
+      <TextContainer
+        data-tip
+        data-for={"messageTip-" + messageDate + "-" + messageId}
+        side={side}
+      >
+        {message}
       </TextContainer>
+      <ReactTooltip
+        id={"messageTip-" + messageDate + "-" + messageId}
+        place={"left"}
+        effect="solid"
+        delayShow={250}
+        className="message-tooltip"
+      >
+        {moment(messageDate).calendar()}
+      </ReactTooltip>
     </Container>
   );
 };
@@ -41,36 +93,45 @@ const SingleMessage = ({ url, side=null, friendId=null, friendDisplay=null }) =>
 const Container = styled.div`
   width: 100%;
   margin-bottom: 20px;
-  display: grid;
-  grid-template-columns: ${({side}) => side === "right" ? '100%' : "60px 180px"};
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: ${({ side }) =>
+    side === "right" ? "flex-end" : "flex-start"};
   position: relative;
-  @media only screen and (max-width: 1000px) {
-    grid-template-columns: ${({side}) => side === "right" ? '100%' : "50px 180px"};
-  }
 `;
 
 const TextContainer = styled.div`
   padding: 10px;
-  width: ${({side}) => side === "right" ? '180px' : "100%"};
-  margin-left: ${({side}) => side === "right" ? 'calc(100% - 210px)' : "0px"};
-  background-color: ${({side}) => side === "right" ? '#F2F7F2' : "#e0e5e0"};
+  max-width: 60%;
+  margin-left: ${({ side }) =>
+    side === "right" ? "calc(100% - 210px)" : "0px"};
+  margin-right: ${({ side }) => (side === "right" ? "11px" : "0px")};
+  background-color: ${({ side, theme }) =>
+    side === "right"
+      ? theme.color.lightBackground
+      : theme.color.darkBackground};
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
   border-radius: 15px;
-  font-size: 12px;
-  font-weight: ${({theme}) => theme.fontWeight.light};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.fontWeight.light};
   overflow-wrap: break-word;
+  @media only screen and (max-width: 1000px) {
+    font-size: 12px;
+  }
 `;
 
 const ProfileIcon = styled.img`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
+  margin: 2.5px 11px 0px 0px;
   border-radius: 50px;
-  margin-top: 10px;
   position: relative;
   cursor: pointer;
+  border: 1px solid ${({ theme }) => theme.color.light};
   @media only screen and (max-width: 1000px) {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
 `;
 
